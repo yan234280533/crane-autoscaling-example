@@ -1,0 +1,1 @@
+# crane-autoscaling-example
