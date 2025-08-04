@@ -7,6 +7,9 @@ import (
 	"path/filepath"
 
 	cranev1beta1 "github.com/gocrane/api/autoscaling/v1alpha1"
+	craneclientset "github.com/gocrane/api/pkg/generated/clientset/versioned"
+	craneinformers "github.com/gocrane/api/pkg/generated/informers/externalversions"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -34,24 +37,28 @@ func main() {
 	// 注册Crane的API
 	cranev1beta1.AddToScheme(scheme.Scheme)
 
-	// 创建动态客户端
-	client, err := rest.RESTClientFor(config)
+	craneClient, err := craneclientset.NewForConfig(config)
 	if err != nil {
-		log.Fatalf("Error creating REST client: %v\n", err)
+		log.Fatalf("Error creating crane client: %v\n", err)
+		return
 	}
+
+	log.Printf("craneclientset created successfully")
 
 	// 获取EHPA列表
 	var ehpaList cranev1beta1.EffectiveHorizontalPodAutoscalerList
-	err = client.Get().
+
+	craneClient.AutoscalingV1alpha1().RESTClient().Get().
 		Resource("effectivehorizontalpodautoscalers").
 		Namespace(metav1.NamespaceAll).
 		VersionedParams(&metav1.ListOptions{}, scheme.ParameterCodec).
 		Do(context.TODO()).
 		Into(&ehpaList)
-
 	if err != nil {
 		log.Fatalf("Error listing EHPAs: %v\n", err)
 	}
+
+	log.Printf("craneclientset get successfully")
 
 	// 打印所有EHPA的名称
 	for _, ehpa := range ehpaList.Items {
