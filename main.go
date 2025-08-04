@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/labels"
 	"log"
 	"path/filepath"
+	"time"
 
 	cranev1beta1 "github.com/gocrane/api/autoscaling/v1alpha1"
 	craneclientset "github.com/gocrane/api/pkg/generated/clientset/versioned"
@@ -63,5 +65,20 @@ func main() {
 	// 打印所有EHPA的名称
 	for _, ehpa := range ehpaList.Items {
 		fmt.Printf("Found EHPA: %s in namespace %s\n", ehpa.Name, ehpa.Namespace)
+	}
+
+	craneInformerFactory := craneinformers.NewSharedInformerFactory(craneClient, time.Minute)
+	ehpaLister := craneInformerFactory.Autoscaling().V1alpha1().EffectiveHorizontalPodAutoscalers().Lister()
+	craneInformerFactory.Start(context.TODO().Done())
+	craneInformerFactory.WaitForCacheSync(context.TODO().Done())
+
+	ehpaItems, err := ehpaLister.List(labels.Everything())
+	if err != nil {
+		log.Fatalf("Error List EHPAs: %v\n", err)
+	}
+
+	// 打印所有EHPA的名称
+	for _, ehpa := range ehpaItems {
+		fmt.Printf("FoundA EHPA: %s in namespace %s\n", ehpa.Name, ehpa.Namespace)
 	}
 }
