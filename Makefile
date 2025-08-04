@@ -1,7 +1,25 @@
+GOOS ?= $(shell go env GOOS)
+GOARCH ?= $(shell go env GOARCH)
+
+# Git information
+GIT_VERSION ?= $(shell git describe --tags --always)
+GIT_COMMIT_HASH ?= $(shell git rev-parse HEAD)
+GIT_TREESTATE = "clean"
+GIT_DIFF = $(shell git diff --quiet >/dev/null 2>&1; if [ $$? -eq 1 ]; then echo "1"; fi)
+ifeq ($(GIT_DIFF), 1)
+    GIT_TREESTATE = "dirty"
+endif
+BUILDDATE = $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
+
+LDFLAGS = "-X github.com/gocrane/crane/pkg/version.gitTag=$(GIT_VERSION) \
+                      -X github.com/gocrane/crane/pkg/version.gitCommit=$(GIT_COMMIT_HASH) \
+                      -X github.com/gocrane/crane/pkg/version.gitTreeState=$(GIT_TREESTATE) \
+                      -X github.com/gocrane/crane/pkg/version.buildDate=$(BUILDDATE)"
+
+# Image URL to use all building/pushing image targets
 # 基础变量定义
 BINARY_NAME=crane-autoscaling-example
-DOCKER_IMAGE=crane-autoscaling-example
-DOCKER_TAG=latest
+DOCKER_IMAGE ?= "registry-dev.vestack.sbuxcf.net/platform-system-dev/crane-autoscaling-example:${GIT_VERSION}"
 
 # 编译目标目录
 BIN_DIR=bin
@@ -27,7 +45,7 @@ build-linux:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(BIN_DIR)/$(BINARY_NAME)-linux main.go
 
 # 构建Docker镜像
-docker: build-linux
+image: build-linux
 	cp $(BIN_DIR)/$(BINARY_NAME)-linux ./$(BINARY_NAME)
-	docker build -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
+	docker buildx build --platform linux/amd64  -t $(DOCKER_IMAGE) .
 	rm -f ./$(BINARY_NAME)

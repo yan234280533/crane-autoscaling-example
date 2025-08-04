@@ -1,4 +1,4 @@
-FROM alpine:3.18
+FROM registry-dev.vestack.sbuxcf.net/bci/golang:1.17.2-alpine.base
 
 WORKDIR /app
 

@@ -3,7 +3,7 @@ module crane-autoscaling-example
 go 1.20
 
 require (
-	github.com/gocrane/api v0.12.2
+	github.com/gocrane/api v0.10.1-0.20230719062935-80579bb68f6a
 	k8s.io/apimachinery v0.26.1
 	k8s.io/client-go v0.26.1
 )
