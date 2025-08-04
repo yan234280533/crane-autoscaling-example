@@ -69,6 +69,11 @@ func main() {
 
 	craneInformerFactory := craneinformers.NewSharedInformerFactory(craneClient, time.Minute)
 	ehpaLister := craneInformerFactory.Autoscaling().V1alpha1().EffectiveHorizontalPodAutoscalers().Lister()
+
+	evpaLister := craneInformerFactory.Autoscaling().V1alpha1().EffectiveVerticalPodAutoscalers().Lister()
+
+	substitutesLists := craneInformerFactory.Autoscaling().V1alpha1().Substitutes().Lister()
+
 	craneInformerFactory.Start(context.TODO().Done())
 	craneInformerFactory.WaitForCacheSync(context.TODO().Done())
 
@@ -81,4 +86,27 @@ func main() {
 	for _, ehpa := range ehpaItems {
 		fmt.Printf("FoundA EHPA: %s in namespace %s\n", ehpa.Name, ehpa.Namespace)
 	}
+
+	evpaItems, err := evpaLister.List(labels.Everything())
+	if err != nil {
+		log.Fatalf("Error List EVPAs: %v\n", err)
+	}
+
+	for _, evpa := range evpaItems {
+		fmt.Printf("FoundA EVPA: %s in namespace %s\n", evpa.Name, evpa.Namespace)
+	}
+
+	log.Printf("craneclientset list evpa successfully")
+
+	substitutesItems, err := substitutesLists.List(labels.Everything())
+	if err != nil {
+		log.Fatalf("Error List substitutes: %v\n", err)
+	}
+
+	// 打印所有EVPA的名称
+	for _, sub := range substitutesItems {
+		fmt.Printf("FoundA substitutes: %s in namespace %s\n", sub.Name, sub.Namespace)
+	}
+
+	log.Printf("craneclientset list sub successfully")
 }
